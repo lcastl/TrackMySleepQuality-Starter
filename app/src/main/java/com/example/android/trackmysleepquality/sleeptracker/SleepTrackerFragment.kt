@@ -53,8 +53,8 @@ class SleepTrackerFragment : Fragment() {
         val sleepTrackerViewModel =
                 ViewModelProvider(
                         this, viewModelFactory).get(SleepTrackerViewModel::class.java)
-        binding.lifecycleOwner = this
         binding.sleepTrackerViewModel = sleepTrackerViewModel
+        binding.lifecycleOwner = this
         return binding.root
     }
 }
