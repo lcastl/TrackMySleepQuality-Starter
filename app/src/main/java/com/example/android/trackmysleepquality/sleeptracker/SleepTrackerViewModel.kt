@@ -17,10 +17,7 @@
 package com.example.android.trackmysleepquality.sleeptracker
 
 import android.app.Application
-import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.Transformations
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.*
 import com.example.android.trackmysleepquality.database.SleepDatabaseDao
 import com.example.android.trackmysleepquality.database.SleepNight
 import com.example.android.trackmysleepquality.formatNights
@@ -30,6 +27,7 @@ import kotlinx.coroutines.*
  * ViewModel for SleepTrackerFragment.
  */
 class SleepTrackerViewModel(
+
         val database: SleepDatabaseDao,
         application: Application) : AndroidViewModel(application) {
     private var viewModelJob = Job()
@@ -38,8 +36,17 @@ class SleepTrackerViewModel(
     private var tonight = MutableLiveData<SleepNight?>()
     private val nights = database.getAllNights()
 
+    private val _navigateToSleepQuality = MutableLiveData<SleepNight>()
+
+    val navigateToSleepQuality: LiveData<SleepNight>
+        get() = _navigateToSleepQuality
+
     val nightsString = Transformations.map(nights) { nights ->
         formatNights(nights, application.resources)
+    }
+
+    fun doneNavigating() {
+        _navigateToSleepQuality.value = null
     }
 
     init {
@@ -47,9 +54,9 @@ class SleepTrackerViewModel(
     }
 
     private fun initializeTonight() {
-       viewModelScope.launch {
-           tonight.value = getTonightFromDatabase()
-       }
+        viewModelScope.launch {
+            tonight.value = getTonightFromDatabase()
+        }
     }
 
     private suspend fun getTonightFromDatabase(): SleepNight? {
@@ -73,6 +80,7 @@ class SleepTrackerViewModel(
             val oldNight = tonight.value ?: return@launch
             oldNight.endTimeMilli = System.currentTimeMillis()
             update(oldNight)
+            _navigateToSleepQuality.value = oldNight
         }
     }
 
@@ -93,7 +101,7 @@ class SleepTrackerViewModel(
     }
 
     private suspend fun insert(night: SleepNight) {
-        withContext(Dispatchers.IO){
+        withContext(Dispatchers.IO) {
             database.insert(night)
         }
     }
